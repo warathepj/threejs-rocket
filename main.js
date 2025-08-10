@@ -15,6 +15,29 @@ document.body.appendChild( renderer.domElement );
 
 const controls = new OrbitControls( camera, renderer.domElement );
 controls.target.set(0, 0, 0); // Set orbit target to the origin
+controls.enableZoom = false; // Disable default OrbitControls zoom
+
+// Custom scroll zoom logic
+renderer.domElement.addEventListener('wheel', (event) => {
+    event.preventDefault();
+
+    const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+    const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    const vector = new THREE.Vector3(mouseX, mouseY, 0.5);
+    vector.unproject(camera);
+
+    const dir = vector.sub(camera.position).normalize();
+    const distance = -camera.position.dot(dir) / dir.dot(dir);
+    const point = camera.position.clone().add(dir.multiplyScalar(distance));
+
+    const zoomFactor = 1.0 + (event.deltaY * -0.001); // Adjust zoom speed
+
+    camera.position.sub(point).multiplyScalar(zoomFactor).add(point);
+    controls.target.sub(point).multiplyScalar(zoomFactor).add(point);
+
+    controls.update();
+}, false);
 
 const geometry = new THREE.BoxGeometry();
 const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
