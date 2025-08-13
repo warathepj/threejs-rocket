@@ -1,12 +1,22 @@
 import * as THREE from 'three';
 import { AxesHelper } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const scene = new THREE.Scene();
 const axesHelper = new AxesHelper( 5 ); // 5 units long axes
 scene.add( axesHelper );
+
+// Add lighting to the scene
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft white light
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8); // Directional light
+directionalLight.position.set(1, 1, 1).normalize();
+scene.add(directionalLight);
+
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-camera.position.set(5, 5, 5); // Initial camera position
+camera.position.set(70, 100, 70); // Initial camera position, adjusted for better view
 camera.lookAt(0, 0, 0); // Point camera at the origin
 
 const renderer = new THREE.WebGLRenderer();
@@ -41,8 +51,25 @@ renderer.domElement.addEventListener('wheel', (event) => {
 
 const geometry = new THREE.BoxGeometry();
 const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-const cube = new THREE.Mesh( geometry, material );
-scene.add( cube );
+const loader = new GLTFLoader();
+loader.load(
+    'low_poly_rocket/scene.gltf',
+    function (gltf) {
+        gltf.scene.position.set(0, 0, 0); // Set position to 0,0,0
+        gltf.scene.scale.set(0.1, 0.1, 0.1); // Scale down the model
+        scene.add(gltf.scene);
+    },
+    undefined,
+    function (error) {
+        console.error(error);
+    }
+);
+
+// Remove the existing cube as it's no longer needed
+// const geometry = new THREE.BoxGeometry();
+// const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+// const cube = new THREE.Mesh( geometry, material );
+// scene.add( cube );
 
 function animate() {
 	requestAnimationFrame( animate );
