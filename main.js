@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const scene = new THREE.Scene();
-const axesHelper = new AxesHelper( 5 ); // 5 units long axes
+const axesHelper = new AxesHelper( 100 ); // 5 units long axes
 scene.add( axesHelper );
 
 // Add lighting to the scene
@@ -58,6 +58,14 @@ loader.load(
         gltf.scene.position.set(0, 0, 0); // Set position to 0,0,0
         gltf.scene.scale.set(0.1, 0.1, 0.1); // Scale down the model
         scene.add(gltf.scene);
+
+        // Create an upside-down white cone
+        const coneGeometry = new THREE.ConeGeometry(13, 25, 32); // radius, height, radialSegments
+        const coneMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff }); // White color
+        const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+        cone.position.set(30, -110, 10); // Position the cone relative to the scaled GLTF model
+        cone.rotation.x = Math.PI; // Rotate 180 degrees to make it upside down
+        gltf.scene.add(cone); // Add cone as a child of the GLTF scene
     },
     undefined,
     function (error) {
@@ -71,8 +79,14 @@ loader.load(
 // const cube = new THREE.Mesh( geometry, material );
 // scene.add( cube );
 
+const timeDisplay = document.getElementById('time-display');
+const startTime = performance.now();
+
 function animate() {
 	requestAnimationFrame( animate );
+
+	const elapsedTime = ((performance.now() - startTime) / 1000).toFixed(1);
+	timeDisplay.textContent = `Time: ${elapsedTime}s`;
 
 	controls.update(); // only required if controls.enableDamping or controls.autoRotate are set to true
 	renderer.render( scene, camera );
