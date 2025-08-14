@@ -2,10 +2,24 @@ import * as THREE from 'three';
 import { AxesHelper } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import * as CANNON from 'cannon-es';
 
 const scene = new THREE.Scene();
 const axesHelper = new AxesHelper( 100 ); // 5 units long axes
 scene.add( axesHelper );
+
+// Initialize Cannon.js world
+const world = new CANNON.World({
+    gravity: new CANNON.Vec3(0, -9.82, 0), // m/s²
+});
+
+// Create a ground plane
+const groundBody = new CANNON.Body({
+    mass: 0, // mass = 0 makes the body static
+    shape: new CANNON.Plane(),
+});
+groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // Rotate it to lie flat on the z-x plane
+world.addBody(groundBody);
 
 // Add lighting to the scene
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft white light
@@ -52,6 +66,8 @@ renderer.domElement.addEventListener('wheel', (event) => {
 const geometry = new THREE.BoxGeometry();
 const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 const loader = new GLTFLoader();
+let rocketBody; // Declare rocketBody outside to be accessible in animate
+
 loader.load(
     'low_poly_rocket/scene.gltf',
     function (gltf) {
@@ -60,12 +76,22 @@ loader.load(
         scene.add(gltf.scene);
 
         // Create an upside-down white cone
-        const coneGeometry = new THREE.ConeGeometry(13, 25, 32); // radius, height, radialSegments
+        const coneGeometry = new THREE.ConeGeometry(140, 185, 32); // radius, height, radialSegments
         const coneMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff }); // White color
         const cone = new THREE.Mesh(coneGeometry, coneMaterial);
-        cone.position.set(30, -110, 10); // Position the cone relative to the scaled GLTF model
+        cone.position.set(30, -84, 10); // Position the cone relative to the scaled GLTF model
         cone.rotation.x = Math.PI; // Rotate 180 degrees to make it upside down
         gltf.scene.add(cone); // Add cone as a child of the GLTF scene
+
+        // Create a Cannon.js body for the rocket
+        const rocketShape = new CANNON.Box(new CANNON.Vec3(5, 5, 5)); // Approximate shape for the rocket
+        rocketBody = new CANNON.Body({
+            mass: 1, // kg
+            position: new CANNON.Vec3(gltf.scene.position.x, gltf.scene.position.y, gltf.scene.position.z),
+            shape: rocketShape,
+        });
+        world.addBody(rocketBody);
+        gltf.scene.userData.physicsBody = rocketBody; // Store reference to physics body
     },
     undefined,
     function (error) {
@@ -82,14 +108,27 @@ loader.load(
 const timeDisplay = document.getElementById('time-display');
 const startTime = performance.now();
 
+const fixedTimeStep = 1.0 / 60.0; // seconds
+
 function animate() {
-	requestAnimationFrame( animate );
+    requestAnimationFrame(animate);
 
-	const elapsedTime = ((performance.now() - startTime) / 1000).toFixed(1);
-	timeDisplay.textContent = `Time: ${elapsedTime}s`;
+    const elapsedTime = ((performance.now() - startTime) / 1000).toFixed(1);
+    timeDisplay.textContent = `Time: ${elapsedTime}s`;
 
-	controls.update(); // only required if controls.enableDamping or controls.autoRotate are set to true
-	renderer.render( scene, camera );
+    // Update the physics world
+    world.step(fixedTimeStep);
+
+    // Synchronize Three.js objects with Cannon.js bodies
+    scene.traverse((object) => {
+        if (object.userData.physicsBody) {
+            object.position.copy(object.userData.physicsBody.position);
+            object.quaternion.copy(object.userData.physicsBody.quaternion);
+        }
+    });
+
+    controls.update(); // only required if controls.enableDamping or controls.autoRotate are set to true
+    renderer.render(scene, camera);
 }
 
 animate();
