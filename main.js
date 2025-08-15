@@ -140,6 +140,11 @@ function animate() {
             rocketBody.velocity.y = 1; // Set velocity along Y-axis to 1
         }
         velocityDisplay.textContent = `Velocity: ${rocketBody.velocity.y.toFixed(2)} m/s`;
+
+        // After 9 seconds, make the camera focus on the rocket
+        if (parseFloat(elapsedTime) >= 9) {
+            controls.target.copy(rocketBody.position);
+        }
     } else {
         velocityDisplay.textContent = `Velocity: 0.00 m/s`;
     }
