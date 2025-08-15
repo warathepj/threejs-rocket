@@ -33,11 +33,14 @@ const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.inner
 camera.position.set(70, 100, 70); // Initial camera position, adjusted for better view
 camera.lookAt(0, 0, 0); // Point camera at the origin
 
+let rocketCamera; // New camera for rocket view
+let currentCamera = camera; // Initially use the main camera
+
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
-const controls = new OrbitControls( camera, renderer.domElement );
+const controls = new OrbitControls( currentCamera, renderer.domElement );
 controls.target.set(0, 0, 0); // Set orbit target to the origin
 controls.enableZoom = false; // Disable default OrbitControls zoom
 
@@ -83,6 +86,11 @@ loader.load(
         cone.position.set(30, -84, 10); // Position the cone relative to the scaled GLTF model
         cone.rotation.x = Math.PI; // Rotate 180 degrees to make it upside down
         gltf.scene.add(cone); // Add cone as a child of the GLTF scene
+
+        // Initialize rocketCamera and add it as a child of the rocket
+        rocketCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        rocketCamera.position.set(0, 100, -150); // Position relative to the rocket
+        gltf.scene.add(rocketCamera);
 
         // Create a Cannon.js body for the rocket
         const rocketShape = new CANNON.Box(new CANNON.Vec3(5, 5, 5)); // Approximate shape for the rocket
@@ -155,6 +163,14 @@ function animate() {
         velocityDisplay.textContent = `Velocity: 0.00 m/s`;
     }
 
+    // Camera switch logic
+    if (parseFloat(elapsedTime) >= 17 && currentCamera === camera) {
+        currentCamera = rocketCamera;
+        controls.object = rocketCamera;
+        controls.target.set(0, 0, 0); // Reset target for the new camera to focus on rocket's local origin
+        controls.update();
+    }
+
     // Update the physics world
     world.step(fixedTimeStep);
 
@@ -167,7 +183,7 @@ function animate() {
     });
 
     controls.update(); // only required if controls.enableDamping or controls.autoRotate are set to true
-    renderer.render(scene, camera);
+    renderer.render(scene, currentCamera);
 }
 
 animate();
