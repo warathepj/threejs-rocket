@@ -108,6 +108,7 @@ loader.load(
 // scene.add( cube );
 
 const timeDisplay = document.getElementById('time-display');
+const velocityDisplay = document.getElementById('velocity-display');
 const startTime = performance.now();
 
 const fixedTimeStep = 1.0 / 60.0; // seconds
@@ -119,7 +120,7 @@ function animate() {
     timeDisplay.textContent = `Time: ${elapsedTime}s`;
 
     // Move rocket after 4 seconds
-    if (parseFloat(elapsedTime) >= 4 && rocketBody && !rocketActivated) {
+    if (parseFloat(elapsedTime) >= 3 && rocketBody && !rocketActivated) {
         rocketBody.mass = 1; // Activate physics by setting mass to 1
         rocketBody.type = CANNON.Body.DYNAMIC;
         rocketActivated = true;
@@ -128,6 +129,14 @@ function animate() {
     if (rocketActivated) {
         rocketBody.wakeUp();
         rocketBody.velocity.y = 1; // Set velocity along Y-axis to 1
+        velocityDisplay.textContent = `Velocity: ${rocketBody.velocity.y.toFixed(2)} m/s`;
+    } else {
+        velocityDisplay.textContent = `Velocity: 0.00 m/s`;
+    }
+
+    // Set rocket velocity to 2 after 5 seconds
+    if (parseFloat(elapsedTime) >= 5 && rocketBody) {
+        rocketBody.velocity.y = 2;
     }
 
     // Update the physics world
