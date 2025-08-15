@@ -90,7 +90,7 @@ loader.load(
             mass: 0, // kg - Set mass to 0 initially to prevent movement
             position: new CANNON.Vec3(gltf.scene.position.x, 6, gltf.scene.position.z), // Adjusted Y-position to prevent initial intersection
             shape: rocketShape,
-            gravityFactor: 0, // Disable gravity initially
+            gravityScale: 0, // Disable gravity initially
         });
         world.addBody(rocketBody);
         gltf.scene.userData.physicsBody = rocketBody; // Store reference to physics body
@@ -118,19 +118,20 @@ function animate() {
     const elapsedTime = ((performance.now() - startTime) / 1000).toFixed(1);
     timeDisplay.textContent = `Time: ${elapsedTime}s`;
 
-    // Update the physics world
-    world.step(fixedTimeStep);
-
     // Move rocket after 4 seconds
     if (parseFloat(elapsedTime) >= 4 && rocketBody && !rocketActivated) {
         rocketBody.mass = 1; // Activate physics by setting mass to 1
-        rocketBody.gravityFactor = 1; // Enable gravity
+        rocketBody.type = CANNON.Body.DYNAMIC;
         rocketActivated = true;
     }
 
     if (rocketActivated) {
-        rocketBody.velocity.z = 1; // Set velocity along Z-axis to 1
+        rocketBody.wakeUp();
+        rocketBody.velocity.y = 1; // Set velocity along Y-axis to 1
     }
+
+    // Update the physics world
+    world.step(fixedTimeStep);
 
     // Synchronize Three.js objects with Cannon.js bodies
     scene.traverse((object) => {
