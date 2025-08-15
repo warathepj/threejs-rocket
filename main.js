@@ -67,6 +67,7 @@ const geometry = new THREE.BoxGeometry();
 const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 const loader = new GLTFLoader();
 let rocketBody; // Declare rocketBody outside to be accessible in animate
+let rocketActivated = false; // Flag to activate rocket physics after 4 seconds
 
 loader.load(
     'low_poly_rocket/scene.gltf',
@@ -86,9 +87,10 @@ loader.load(
         // Create a Cannon.js body for the rocket
         const rocketShape = new CANNON.Box(new CANNON.Vec3(5, 5, 5)); // Approximate shape for the rocket
         rocketBody = new CANNON.Body({
-            mass: 1, // kg
-            position: new CANNON.Vec3(gltf.scene.position.x, gltf.scene.position.y, gltf.scene.position.z),
+            mass: 0, // kg - Set mass to 0 initially to prevent movement
+            position: new CANNON.Vec3(gltf.scene.position.x, 6, gltf.scene.position.z), // Adjusted Y-position to prevent initial intersection
             shape: rocketShape,
+            gravityFactor: 0, // Disable gravity initially
         });
         world.addBody(rocketBody);
         gltf.scene.userData.physicsBody = rocketBody; // Store reference to physics body
@@ -118,6 +120,17 @@ function animate() {
 
     // Update the physics world
     world.step(fixedTimeStep);
+
+    // Move rocket after 4 seconds
+    if (parseFloat(elapsedTime) >= 4 && rocketBody && !rocketActivated) {
+        rocketBody.mass = 1; // Activate physics by setting mass to 1
+        rocketBody.gravityFactor = 1; // Enable gravity
+        rocketActivated = true;
+    }
+
+    if (rocketActivated) {
+        rocketBody.velocity.z = 1; // Set velocity along Z-axis to 1
+    }
 
     // Synchronize Three.js objects with Cannon.js bodies
     scene.traverse((object) => {
