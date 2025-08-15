@@ -22,15 +22,15 @@ groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // Rotate it to lie flat
 world.addBody(groundBody);
 
 // TODO Create a white transparent plane
-const planeGeometry = new THREE.BoxGeometry(300, 50, 200); // width, height, depth
-const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
-const transparentPlane = new THREE.Mesh(planeGeometry, planeMaterial);
-transparentPlane.position.set(70, 500, 300);
-scene.add(transparentPlane);
+// const planeGeometry = new THREE.BoxGeometry(300, 50, 200); // width, height, depth
+// const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
+// const transparentPlane = new THREE.Mesh(planeGeometry, planeMaterial);
+// transparentPlane.position.set(70, 500, 300);
+// scene.add(transparentPlane);
 
 // Add a new red box
-const redBoxGeometry = new THREE.BoxGeometry(500, 3000, 500);
-const redBoxMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 }); // Changed to white transparent
+const redBoxGeometry = new THREE.BoxGeometry(1500, 3000, 1500);
+const redBoxMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.01 }); // Changed to white transparent
 const redBox = new THREE.Mesh(redBoxGeometry, redBoxMaterial);
 redBox.position.set(0, 2000, 0);
 scene.add(redBox);
@@ -40,8 +40,8 @@ const redBoxWidth = redBoxGeometry.parameters.width;
 const redBoxHeight = redBoxGeometry.parameters.height;
 const redBoxDepth = redBoxGeometry.parameters.depth;
 
-for (let i = 0; i < 100; i++) {
-    const sphereGeometry = new THREE.SphereGeometry(5, 32, 32); // radius, widthSegments, heightSegments
+for (let i = 0; i < 2500; i++) {
+    const sphereGeometry = new THREE.SphereGeometry(1, 8, 8); // radius, widthSegments, heightSegments
     const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff }); // White color
     const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 
