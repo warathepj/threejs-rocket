@@ -128,15 +128,20 @@ function animate() {
 
     if (rocketActivated) {
         rocketBody.wakeUp();
-        rocketBody.velocity.y = 1; // Set velocity along Y-axis to 1
+        if (parseFloat(elapsedTime) >= 10) {
+            rocketBody.velocity.y = 40;
+        } else if (parseFloat(elapsedTime) >= 8) {
+            rocketBody.velocity.y = 20;
+        } else if (parseFloat(elapsedTime) >= 6) {
+            rocketBody.velocity.y = 6;
+        } else if (parseFloat(elapsedTime) >= 5) {
+            rocketBody.velocity.y = 2;
+        } else {
+            rocketBody.velocity.y = 1; // Set velocity along Y-axis to 1
+        }
         velocityDisplay.textContent = `Velocity: ${rocketBody.velocity.y.toFixed(2)} m/s`;
     } else {
         velocityDisplay.textContent = `Velocity: 0.00 m/s`;
-    }
-
-    // Set rocket velocity to 2 after 5 seconds
-    if (parseFloat(elapsedTime) >= 5 && rocketBody) {
-        rocketBody.velocity.y = 2;
     }
 
     // Update the physics world
