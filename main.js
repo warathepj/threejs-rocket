@@ -87,9 +87,9 @@ loader.load(
         cone.rotation.x = Math.PI; // Rotate 180 degrees to make it upside down
         gltf.scene.add(cone); // Add cone as a child of the GLTF scene
 
-        // Initialize rocketCamera and add it as a child of the rocket
+        // TODO Initialize rocketCamera and add it as a child of the rocket
         rocketCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        rocketCamera.position.set(0, 100, -150); // Position relative to the rocket
+        rocketCamera.position.set(0, 1000, -450); // Position relative to the rocket, moved further back
         gltf.scene.add(rocketCamera);
 
         // Create a Cannon.js body for the rocket
