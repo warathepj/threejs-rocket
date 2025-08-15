@@ -128,7 +128,13 @@ function animate() {
 
     if (rocketActivated) {
         rocketBody.wakeUp();
-        if (parseFloat(elapsedTime) >= 10) {
+        if (parseFloat(elapsedTime) >= 16) {
+            rocketBody.velocity.y = 220;
+        } else if (parseFloat(elapsedTime) >= 14) {
+            rocketBody.velocity.y = 150;
+        } else if (parseFloat(elapsedTime) >= 12) {
+            rocketBody.velocity.y = 100;
+        } else if (parseFloat(elapsedTime) >= 10) {
             rocketBody.velocity.y = 40;
         } else if (parseFloat(elapsedTime) >= 8) {
             rocketBody.velocity.y = 20;
