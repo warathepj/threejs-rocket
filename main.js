@@ -113,6 +113,7 @@ const loader = new GLTFLoader();
 let rocketBody; // Declare rocketBody outside to be accessible in animate
 let rocketVisualModel; // Declare rocketVisualModel to hold the loaded GLTF scene
 let rocketActivated = false; // Flag to activate rocket physics after 4 seconds
+let cone; // Declare cone globally
 
 loader.load(
     'low_poly_rocket/scene.gltf',
@@ -123,12 +124,13 @@ loader.load(
         scene.add(rocketVisualModel);
 
         // Create an upside-down white cone
-        const coneGeometry = new THREE.ConeGeometry(140, 185, 32); // radius, height, radialSegments
+        const coneGeometry = new THREE.ConeGeometry(140, 225, 32); // radius, height, radialSegments
         const coneMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff }); // White color
-        const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+        cone = new THREE.Mesh(coneGeometry, coneMaterial); // Assign to global cone
         cone.position.set(30, -84, 10); // Position the cone relative to the scaled GLTF model
         cone.rotation.x = Math.PI; // Rotate 180 degrees to make it upside down
         rocketVisualModel.add(cone); // Add cone as a child of the GLTF scene
+        cone.visible = false; // Initially hide the cone
 
         // TODO Initialize rocketCamera and add it as a child of the rocket
         rocketCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -179,6 +181,16 @@ function animate() {
         rocketBody.velocity.y = 0; // Stop rocket movement
         velocityDisplay.textContent = `Velocity: 0.00 m/s (Animation Stopped)`;
         return; // Exit animate function
+    }
+
+    // Show cone after 3 seconds
+    if (parseFloat(elapsedTime) >= 3 && cone && !cone.visible) {
+        cone.visible = true;
+    }
+
+    // Hide cone at 12 seconds
+    if (parseFloat(elapsedTime) >= 12 && cone && cone.visible) {
+        cone.visible = false;
     }
 
     // Move rocket after 4 seconds
