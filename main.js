@@ -5,8 +5,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as CANNON from 'cannon-es';
 
 const scene = new THREE.Scene();
-const axesHelper = new AxesHelper( 100 ); // 5 units long axes
-scene.add( axesHelper );
+// const axesHelper = new AxesHelper( 100 ); // 5 units long axes
+// scene.add( axesHelper );
 
 // Initialize Cannon.js world
 const world = new CANNON.World({
@@ -20,6 +20,13 @@ const groundBody = new CANNON.Body({
 });
 groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // Rotate it to lie flat on the z-x plane
 world.addBody(groundBody);
+
+// Create a light brown plane
+const brownPlaneGeometry = new THREE.BoxGeometry(1000, 5, 1000);
+const brownPlaneMaterial = new THREE.MeshBasicMaterial({ color: 0x666600 }); // Changed to #666600
+const brownPlane = new THREE.Mesh(brownPlaneGeometry, brownPlaneMaterial);
+brownPlane.position.set(0, 0, 0);
+scene.add(brownPlane);
 
 // TODO Create a white transparent plane
 // const planeGeometry = new THREE.BoxGeometry(300, 50, 200); // width, height, depth
@@ -68,6 +75,7 @@ camera.lookAt(0, 0, 0); // Point camera at the origin
 
 let rocketCamera; // New camera for rocket view
 let currentCamera = camera; // Initially use the main camera
+let isVibrating = false; // New variable to control rocket vibration
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
@@ -103,14 +111,16 @@ const geometry = new THREE.BoxGeometry();
 const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 const loader = new GLTFLoader();
 let rocketBody; // Declare rocketBody outside to be accessible in animate
+let rocketVisualModel; // Declare rocketVisualModel to hold the loaded GLTF scene
 let rocketActivated = false; // Flag to activate rocket physics after 4 seconds
 
 loader.load(
     'low_poly_rocket/scene.gltf',
     function (gltf) {
-        gltf.scene.position.set(0, 0, 0); // Set position to 0,0,0
-        gltf.scene.scale.set(0.1, 0.1, 0.1); // Scale down the model
-        scene.add(gltf.scene);
+        rocketVisualModel = gltf.scene; // Assign the loaded scene to the global variable
+        rocketVisualModel.position.set(0, 0, 0); // Set position to 0,0,0
+        rocketVisualModel.scale.set(0.1, 0.1, 0.1); // Scale down the model
+        scene.add(rocketVisualModel);
 
         // Create an upside-down white cone
         const coneGeometry = new THREE.ConeGeometry(140, 185, 32); // radius, height, radialSegments
@@ -118,23 +128,23 @@ loader.load(
         const cone = new THREE.Mesh(coneGeometry, coneMaterial);
         cone.position.set(30, -84, 10); // Position the cone relative to the scaled GLTF model
         cone.rotation.x = Math.PI; // Rotate 180 degrees to make it upside down
-        gltf.scene.add(cone); // Add cone as a child of the GLTF scene
+        rocketVisualModel.add(cone); // Add cone as a child of the GLTF scene
 
         // TODO Initialize rocketCamera and add it as a child of the rocket
         rocketCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         rocketCamera.position.set(0, 1000, -450); // Position relative to the rocket, moved further back
-        gltf.scene.add(rocketCamera);
+        rocketVisualModel.add(rocketCamera);
 
         // Create a Cannon.js body for the rocket
         const rocketShape = new CANNON.Box(new CANNON.Vec3(5, 5, 5)); // Approximate shape for the rocket
         rocketBody = new CANNON.Body({
             mass: 0, // kg - Set mass to 0 initially to prevent movement
-            position: new CANNON.Vec3(gltf.scene.position.x, 6, gltf.scene.position.z), // Adjusted Y-position to prevent initial intersection
+            position: new CANNON.Vec3(rocketVisualModel.position.x, 6, rocketVisualModel.position.z), // Adjusted Y-position to prevent initial intersection
             shape: rocketShape,
             gravityScale: 0, // Disable gravity initially
         });
         world.addBody(rocketBody);
-        gltf.scene.userData.physicsBody = rocketBody; // Store reference to physics body
+        rocketVisualModel.userData.physicsBody = rocketBody; // Store reference to physics body
     },
     undefined,
     function (error) {
@@ -151,14 +161,25 @@ loader.load(
 const timeDisplay = document.getElementById('time-display');
 const velocityDisplay = document.getElementById('velocity-display');
 const startTime = performance.now();
+let animationStopped = false; // New variable to control animation state
 
 const fixedTimeStep = 1.0 / 60.0; // seconds
 
 function animate() {
+    if (animationStopped) return; // Stop animation if flag is true
+
     requestAnimationFrame(animate);
 
     const elapsedTime = ((performance.now() - startTime) / 1000).toFixed(1);
     timeDisplay.textContent = `Time: ${elapsedTime}s`;
+
+    // Stop animation at 30 seconds
+    if (parseFloat(elapsedTime) >= 30 && rocketBody) {
+        animationStopped = true;
+        rocketBody.velocity.y = 0; // Stop rocket movement
+        velocityDisplay.textContent = `Velocity: 0.00 m/s (Animation Stopped)`;
+        return; // Exit animate function
+    }
 
     // Move rocket after 4 seconds
     if (parseFloat(elapsedTime) >= 3 && rocketBody && !rocketActivated) {
@@ -171,20 +192,28 @@ function animate() {
         rocketBody.wakeUp();
         if (parseFloat(elapsedTime) >= 16) {
             rocketBody.velocity.y = 220;
+            isVibrating = true; // Activate vibration
         } else if (parseFloat(elapsedTime) >= 14) {
             rocketBody.velocity.y = 150;
+            isVibrating = false;
         } else if (parseFloat(elapsedTime) >= 12) {
             rocketBody.velocity.y = 100;
+            isVibrating = false;
         } else if (parseFloat(elapsedTime) >= 10) {
             rocketBody.velocity.y = 40;
+            isVibrating = false;
         } else if (parseFloat(elapsedTime) >= 8) {
             rocketBody.velocity.y = 20;
+            isVibrating = false;
         } else if (parseFloat(elapsedTime) >= 6) {
             rocketBody.velocity.y = 6;
+            isVibrating = false;
         } else if (parseFloat(elapsedTime) >= 5) {
             rocketBody.velocity.y = 2;
+            isVibrating = false;
         } else {
             rocketBody.velocity.y = 1; // Set velocity along Y-axis to 1
+            isVibrating = false;
         }
         velocityDisplay.textContent = `Velocity: ${rocketBody.velocity.y.toFixed(2)} m/s`;
 
@@ -210,7 +239,15 @@ function animate() {
     // Synchronize Three.js objects with Cannon.js bodies
     scene.traverse((object) => {
         if (object.userData.physicsBody) {
-            object.position.copy(object.userData.physicsBody.position);
+            if (object === rocketVisualModel && isVibrating) {
+                // Apply small random offset for vibration to the visual model
+                object.position.x = object.userData.physicsBody.position.x + (Math.random() - 0.5) * 0.5; // Adjust 0.5 for intensity
+                object.position.y = object.userData.physicsBody.position.y + (Math.random() - 0.5) * 0.5;
+                object.position.z = object.userData.physicsBody.position.z + (Math.random() - 0.5) * 0.5;
+            } else {
+                // Ensure position is synchronized when not vibrating or for other objects
+                object.position.copy(object.userData.physicsBody.position);
+            }
             object.quaternion.copy(object.userData.physicsBody.quaternion);
         }
     });
