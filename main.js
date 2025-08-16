@@ -114,6 +114,7 @@ let rocketBody; // Declare rocketBody outside to be accessible in animate
 let rocketVisualModel; // Declare rocketVisualModel to hold the loaded GLTF scene
 let rocketActivated = false; // Flag to activate rocket physics after 4 seconds
 let cone; // Declare cone globally
+let yellowCone; // Declare yellowCone globally
 
 loader.load(
     'low_poly_rocket/scene.gltf',
@@ -131,6 +132,15 @@ loader.load(
         cone.rotation.x = Math.PI; // Rotate 180 degrees to make it upside down
         rocketVisualModel.add(cone); // Add cone as a child of the GLTF scene
         cone.visible = false; // Initially hide the cone
+
+        // Create a new yellow cone
+        const yellowConeGeometry = new THREE.ConeGeometry(140, 600, 32); // Same dimensions as the white cone
+        const yellowConeMaterial = new THREE.MeshBasicMaterial({ color: 0xffd11a }); // Yellow color
+        yellowCone = new THREE.Mesh(yellowConeGeometry, yellowConeMaterial);
+        yellowCone.position.set(30, -270, 10); // Same position as the white cone
+        yellowCone.rotation.x = Math.PI; // Rotate 180 degrees to make it upside down
+        rocketVisualModel.add(yellowCone); // Add as a child of the GLTF scene
+        yellowCone.visible = false; // Initially hide the yellow cone
 
         // TODO Initialize rocketCamera and add it as a child of the rocket
         rocketCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -188,9 +198,12 @@ function animate() {
         cone.visible = true;
     }
 
-    // Hide cone at 12 seconds
+    // Hide cone at 12 seconds and show yellow cone
     if (parseFloat(elapsedTime) >= 12 && cone && cone.visible) {
         cone.visible = false;
+        if (yellowCone) {
+            yellowCone.visible = true;
+        }
     }
 
     // Move rocket after 4 seconds
